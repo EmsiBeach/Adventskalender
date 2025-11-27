@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Familien Adventskalender 2024</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Georgia', serif;
+            background: linear-gradient(135deg, #1a472a 0%, #0f2818 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #fff;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Schnee-Animation */
+        .snowflake {
+            position: fixed;
+            top: -10px;
+            color: #fff;
+            font-size: 1em;
+            opacity: 0.8;
+            pointer-events: none;
+            animation: fall linear infinite;
+            z-index: 1;
+        }
+
+        @keyframes fall {
+            to {
+                transform: translateY(100vh) rotate(360deg);
+            }
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            position: relative;
+            z-index: 2;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            color: #ffd700;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 1.2em;
+            color: #ffecb3;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 2;
+        }
+
+        .door {
+            aspect-ratio: 1;
+            background: linear-gradient(145deg, #8b0000, #a52a2a);
+            border-radius: 10px;
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            border: 3px solid #ffd700;
+        }
+
+        .door:hover:not(.locked):not(.opened) {
+            transform: scale(1.05);
+        }
+
+        .door.locked {
+            cursor: not-allowed;
+            opacity: 0.6;
+            background: linear-gradient(145deg, #4a4a4a, #666);
+        }
+
+        .door-number {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 3em;
+            font-weight: bold;
+            color: #ffd700;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+            z-index: 1;
+        }
+
+        .door.today {
+            animation: pulse 2s ease-in-out infinite;
+            box-shadow: 0 0 20px #ffd700;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+        }
+
+        .door-content {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.95);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .door-content.active {
+            display: flex;
+        }
+
+        .content-box {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            color: #333;
+            box-shadow: 0 10px 40px rgba(255,215,0,0.3);
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #8b0000;
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 1.5em;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .close-btn:hover {
+            background: #a52a2a;
+        }
+
+        .content-image {
+            width: 100%;
+            max-height: 500px;
+            object-fit: contain;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .question {
+            font-size: 1.3em;
+            color: #8b0000;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 20px;
+            font-style: italic;
+        }
+
+        .day-title {
+            text-align: center;
+            font-size: 2em;
+            color: #1a472a;
+            margin-bottom: 20px;
+        }
+
+        .door.opened {
+            background: linear-gradient(145deg, #2d5a3d, #1a472a);
+            opacity: 0.8;
+        }
+
+        .door.opened .door-number::after {
+            content: '✓';
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            font-size: 0.5em;
+            color: #90ee90;
+        }
+
+        .setup-link {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #ffd700;
+            color: #1a472a;
+            padding: 10px 20px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: bold;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            z-index: 100;
+        }
+
+        .setup-link:hover {
+            background: #ffed4e;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8em;
+            }
+            
+            .calendar-grid {
+                grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+                gap: 10px;
+            }
+            
+            .door-number {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>🎄 Familien Adventskalender 2024 🎄</h1>
+        <p class="subtitle">Jeden Tag eine neue Überraschung</p>
+    </header>
+
+    <div class="calendar-grid" id="calendar"></div>
+
+    <div class="door-content" id="modal">
+        <div class="content-box">
+            <button class="close-btn" onclick="closeModal()">×</button>
+            <h2 class="day-title" id="modalDay"></h2>
+            <p class="question" id="modalQuestion"></p>
+            <img class="content-image" id="modalImage" alt="Familienbild">
+        </div>
+    </div>
+
+    <a href="setup.html" class="setup-link">⚙️ Kalender einrichten</a>
+
+    <script>
+        const questions = [
+            "Weißt du noch, wo das war?",
+            "Wann war das nochmal?",
+            "Erinnerst du dich an diesen Tag?",
+            "Wo sind wir hier?",
+            "Weißt du noch, was wir da gemacht haben?",
+            "Wer hat dieses Foto gemacht?",
+            "Was war das Besondere an diesem Tag?",
+            "Erkennst du den Ort wieder?",
+            "In welchem Jahr war das?",
+            "Welche Jahreszeit war das?"
+        ];
+
+        // Schnee-Animation erstellen
+        function createSnowflakes() {
+            const snowflakes = ['❄', '❅', '❆'];
+            for (let i = 0; i < 30; i++) {
+                const snowflake = document.createElement('div');
+                snowflake.className = 'snowflake';
+                snowflake.textContent = snowflakes[Math.floor(Math.random() * snowflakes.length)];
+                snowflake.style.left = Math.random() * 100 + '%';
+                snowflake.style.animationDuration = (Math.random() * 3 + 5) + 's';
+                snowflake.style.animationDelay = Math.random() * 5 + 's';
+                snowflake.style.fontSize = (Math.random() * 10 + 10) + 'px';
+                document.body.appendChild(snowflake);
+            }
+        }
+
+        // Kalender-Daten laden
+        function loadCalendarData() {
+            const saved = localStorage.getItem('adventCalendar');
+            if (saved) {
+                return JSON.parse(saved);
+            }
+            return {};
+        }
+
+        // Geöffnete Türchen laden
+        function loadOpenedDoors() {
+            const saved = localStorage.getItem('openedDoors');
+            return saved ? JSON.parse(saved) : [];
+        }
+
+        // Türchen als geöffnet markieren
+        function markDoorAsOpened(day) {
+            const opened = loadOpenedDoors();
+            if (!opened.includes(day)) {
+                opened.push(day);
+                localStorage.setItem('openedDoors', JSON.stringify(opened));
+            }
+        }
+
+        // Aktuelles Datum (für Tests kann man hier ein festes Datum setzen)
+        function getCurrentDate() {
+            const now = new Date();
+            return {
+                month: now.getMonth() + 1, // Dezember = 12
+                day: now.getDate()
+            };
+        }
+
+        // Prüfen ob Türchen verfügbar ist
+        function isDoorAvailable(day) {
+            const current = getCurrentDate();
+            // Nur im Dezember und nur bis zum aktuellen Tag
+            return current.month === 12 && day <= current.day;
+        }
+
+        // Kalender rendern
+        function renderCalendar() {
+            const calendar = document.getElementById('calendar');
+            const calendarData = loadCalendarData();
+            const openedDoors = loadOpenedDoors();
+            const current = getCurrentDate();
+            
+            for (let i = 1; i <= 24; i++) {
+                const door = document.createElement('div');
+                door.className = 'door';
+                
+                const available = isDoorAvailable(i);
+                const hasContent = calendarData[i] && calendarData[i].image;
+                const isOpened = openedDoors.includes(i);
+                
+                if (!available) {
+                    door.classList.add('locked');
+                } else if (isOpened) {
+                    door.classList.add('opened');
+                } else if (current.month === 12 && i === current.day) {
+                    door.classList.add('today');
+                }
+                
+                const number = document.createElement('div');
+                number.className = 'door-number';
+                number.textContent = i;
+                door.appendChild(number);
+                
+                if (available && hasContent) {
+                    door.onclick = () => openDoor(i);
+                } else if (!hasContent && available) {
+                    door.onclick = () => alert('Für dieses Türchen wurde noch kein Bild hochgeladen. Bitte in den Einstellungen hinzufügen!');
+                }
+                
+                calendar.appendChild(door);
+            }
+        }
+
+        // Türchen öffnen
+        function openDoor(day) {
+            const calendarData = loadCalendarData();
+            const doorData = calendarData[day];
+            
+            if (!doorData || !doorData.image) {
+                alert('Für dieses Türchen ist noch kein Bild vorhanden.');
+                return;
+            }
+            
+            const modal = document.getElementById('modal');
+            const modalDay = document.getElementById('modalDay');
+            const modalQuestion = document.getElementById('modalQuestion');
+            const modalImage = document.getElementById('modalImage');
+            
+            modalDay.textContent = day + '. Dezember';
+            modalQuestion.textContent = questions[Math.floor(Math.random() * questions.length)];
+            modalImage.src = doorData.image;
+            
+            modal.classList.add('active');
+            markDoorAsOpened(day);
+        }
+
+        // Modal schließen
+        function closeModal() {
+            const modal = document.getElementById('modal');
+            modal.classList.remove('active');
+            // Kalender neu rendern um geöffnete Türchen zu markieren
+            document.getElementById('calendar').innerHTML = '';
+            renderCalendar();
+        }
+
+        // Modal schließen bei Klick außerhalb
+        document.getElementById('modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+
+        // ESC-Taste zum Schließen
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+        });
+
+        // Initialisierung
+        createSnowflakes();
+        renderCalendar();
+    </script>
+</body>
+</html>
