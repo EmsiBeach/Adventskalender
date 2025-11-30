@@ -264,10 +264,12 @@
             <h3>📝 Anleitung</h3>
             <ul>
                 <li>Klicke auf ein Türchen-Feld, um ein Bild hochzuladen</li>
+                <li>Bilder werden automatisch komprimiert für optimale Speichernutzung</li>
                 <li>Du kannst Bilder jederzeit ersetzen oder entfernen</li>
                 <li>Die Bilder werden lokal im Browser gespeichert</li>
-                <li>Empfohlene Bildgröße: max. 2-3 MB pro Bild</li>
+                <li>Empfohlene Bildgröße: max. 10 MB pro Bild</li>
                 <li>Unterstützte Formate: JPG, PNG, GIF</li>
+                <li><strong>Tipp:</strong> Bei Speicherproblemen nutze Export/Import für andere Geräte</li>
             </ul>
         </div>
 
@@ -275,6 +277,7 @@
 
         <div class="progress-info">
             Bilder hochgeladen: <span id="progress">0</span> / 24
+            <span id="storageInfo" style="display: block; font-size: 0.8em; margin-top: 5px; color: #666;"></span>
         </div>
 
         <div class="doors-grid" id="doorsGrid"></div>
@@ -310,6 +313,27 @@
         function updateProgress() {
             const count = Object.keys(calendarData).filter(key => calendarData[key].image).length;
             document.getElementById('progress').textContent = count;
+            
+            // Speichernutzung anzeigen
+            try {
+                const dataStr = JSON.stringify(calendarData);
+                const bytes = new Blob([dataStr]).size;
+                const mb = (bytes / (1024 * 1024)).toFixed(2);
+                const storageInfo = document.getElementById('storageInfo');
+                
+                if (mb > 4) {
+                    storageInfo.textContent = `⚠️ Speichernutzung: ${mb} MB (kritisch)`;
+                    storageInfo.style.color = '#dc3545';
+                } else if (mb > 3) {
+                    storageInfo.textContent = `⚠️ Speichernutzung: ${mb} MB (hoch)`;
+                    storageInfo.style.color = '#ffc107';
+                } else {
+                    storageInfo.textContent = `Speichernutzung: ${mb} MB`;
+                    storageInfo.style.color = '#28a745';
+                }
+            } catch (e) {
+                // Fehler beim Berechnen ignorieren
+            }
         }
 
         // Setup-Grid rendern
@@ -378,14 +402,14 @@
             updateProgress();
         }
 
-        // Bild hochladen
+        // Bild hochladen mit Kompression
         function handleImageUpload(event, day) {
             const file = event.target.files[0];
             if (!file) return;
 
-            // Dateigröße prüfen (max 5MB)
-            if (file.size > 5 * 1024 * 1024) {
-                showStatus('Bild ist zu groß! Maximal 5MB erlaubt.', 'error');
+            // Dateigröße prüfen (max 10MB original)
+            if (file.size > 10 * 1024 * 1024) {
+                showStatus('Bild ist zu groß! Maximal 10MB erlaubt.', 'error');
                 return;
             }
 
@@ -395,21 +419,75 @@
                 return;
             }
 
+            showStatus(`Bild wird komprimiert und hochgeladen...`, 'success');
+
             const reader = new FileReader();
             reader.onload = function(e) {
-                calendarData[day] = {
-                    image: e.target.result,
-                    uploadDate: new Date().toISOString()
-                };
-                pendingChanges = true;
-                saveData();
-                renderSetup();
-                showStatus(`Bild für Türchen ${day} erfolgreich hochgeladen!`, 'success');
+                compressImage(e.target.result, day);
             };
             reader.onerror = function() {
-                showStatus('Fehler beim Hochladen des Bildes!', 'error');
+                showStatus('Fehler beim Lesen des Bildes!', 'error');
             };
             reader.readAsDataURL(file);
+        }
+
+        // Bild komprimieren
+        function compressImage(dataUrl, day) {
+            const img = new Image();
+            img.onload = function() {
+                const canvas = document.createElement('canvas');
+                let width = img.width;
+                let height = img.height;
+                
+                // Max-Breite: 1200px (ausreichend für Anzeige)
+                const maxWidth = 1200;
+                if (width > maxWidth) {
+                    height = (height * maxWidth) / width;
+                    width = maxWidth;
+                }
+                
+                canvas.width = width;
+                canvas.height = height;
+                
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                
+                // Als JPEG mit 85% Qualität (guter Kompromiss)
+                const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.85);
+                
+                // LocalStorage-Speicherung mit Error-Handling
+                try {
+                    calendarData[day] = {
+                        image: compressedDataUrl,
+                        uploadDate: new Date().toISOString()
+                    };
+                    
+                    // Versuche zu speichern
+                    localStorage.setItem('adventCalendar', JSON.stringify(calendarData));
+                    
+                    pendingChanges = true;
+                    renderSetup();
+                    
+                    const originalSize = dataUrl.length;
+                    const compressedSize = compressedDataUrl.length;
+                    const reduction = Math.round((1 - compressedSize/originalSize) * 100);
+                    
+                    showStatus(`Bild für Türchen ${day} erfolgreich hochgeladen! (${reduction}% kleiner)`, 'success');
+                    
+                } catch (e) {
+                    if (e.name === 'QuotaExceededError' || e.code === 22) {
+                        // Speicher voll
+                        delete calendarData[day]; // Änderung rückgängig machen
+                        showStatus('❌ Speicher voll! Bitte exportiere deine Daten und lade sie auf einem anderen Gerät hoch, oder komprimiere die vorhandenen Bilder stärker.', 'error');
+                    } else {
+                        showStatus('Fehler beim Speichern: ' + e.message, 'error');
+                    }
+                }
+            };
+            img.onerror = function() {
+                showStatus('Fehler beim Verarbeiten des Bildes!', 'error');
+            };
+            img.src = dataUrl;
         }
 
         // Bild entfernen
