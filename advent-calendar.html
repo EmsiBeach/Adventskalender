@@ -255,7 +255,7 @@
         </div>
     </div>
 
-    <a href="setup.html" class="setup-link">⚙️ Kalender einrichten</a>
+    <!-- Setup-Link entfernt, da Bilder direkt auf GitHub liegen -->
 
     <script>
         const questions = [
@@ -286,13 +286,19 @@
             }
         }
 
-        // Kalender-Daten laden
+        // Konfiguration: Bildformat (jpg, png, etc.)
+        const IMAGE_FORMAT = 'jpg'; // Ändere zu 'png' falls du PNG-Bilder verwendest
+        
+        // Kalender-Daten laden - Bilder kommen von GitHub
         function loadCalendarData() {
-            const saved = localStorage.getItem('adventCalendar');
-            if (saved) {
-                return JSON.parse(saved);
+            // Erstelle ein Objekt mit allen 24 Türchen
+            const data = {};
+            for (let i = 1; i <= 24; i++) {
+                data[i] = {
+                    image: `images/${i}.${IMAGE_FORMAT}`
+                };
             }
-            return {};
+            return data;
         }
 
         // Geöffnete Türchen laden
@@ -338,7 +344,6 @@
                 door.className = 'door';
                 
                 const available = isDoorAvailable(i);
-                const hasContent = calendarData[i] && calendarData[i].image;
                 const isOpened = openedDoors.includes(i);
                 
                 if (!available) {
@@ -354,10 +359,8 @@
                 number.textContent = i;
                 door.appendChild(number);
                 
-                if (available && hasContent) {
+                if (available) {
                     door.onclick = () => openDoor(i);
-                } else if (!hasContent && available) {
-                    door.onclick = () => alert('Für dieses Türchen wurde noch kein Bild hochgeladen. Bitte in den Einstellungen hinzufügen!');
                 }
                 
                 calendar.appendChild(door);
@@ -369,11 +372,6 @@
             const calendarData = loadCalendarData();
             const doorData = calendarData[day];
             
-            if (!doorData || !doorData.image) {
-                alert('Für dieses Türchen ist noch kein Bild vorhanden.');
-                return;
-            }
-            
             const modal = document.getElementById('modal');
             const modalDay = document.getElementById('modalDay');
             const modalQuestion = document.getElementById('modalQuestion');
@@ -382,6 +380,15 @@
             modalDay.textContent = day + '. Dezember';
             modalQuestion.textContent = questions[Math.floor(Math.random() * questions.length)];
             modalImage.src = doorData.image;
+            
+            // Error handling falls Bild nicht existiert
+            modalImage.onerror = function() {
+                modalQuestion.textContent = `Bild ${day}.${IMAGE_FORMAT} wurde nicht gefunden. Bitte stelle sicher, dass die Datei im images-Ordner existiert.`;
+                modalImage.style.display = 'none';
+            };
+            modalImage.onload = function() {
+                modalImage.style.display = 'block';
+            };
             
             modal.classList.add('active');
             markDoorAsOpened(day);
