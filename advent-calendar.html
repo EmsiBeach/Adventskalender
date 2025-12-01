@@ -286,17 +286,12 @@
             }
         }
 
-        // Konfiguration: Bildformat (jpg, png, etc.)
-        const IMAGE_FORMAT = 'jpg'; // Ändere zu 'png' falls du PNG-Bilder verwendest
-        
         // Kalender-Daten laden - Bilder kommen von GitHub
+        // Der Kalender probiert automatisch: jpg, jpeg, png, gif
         function loadCalendarData() {
-            // Erstelle ein Objekt mit allen 24 Türchen
             const data = {};
             for (let i = 1; i <= 24; i++) {
-                data[i] = {
-                    image: `images/${i}.${IMAGE_FORMAT}`
-                };
+                data[i] = { day: i };
             }
             return data;
         }
@@ -318,10 +313,14 @@
 
         // Aktuelles Datum (für Tests kann man hier ein festes Datum setzen)
         function getCurrentDate() {
+            // FÜR TESTS: Entferne die zwei Schrägstriche vor der nächsten Zeile:
+            // return { month: 12, day: 10 };
+            
+            // LIVE-MODUS: Diese Zeilen aktiv lassen
             const now = new Date();
             return {
-            month: now.getMonth() + 1, // Dezember = 12
-            day: now.getDate()
+                month: now.getMonth() + 1, // Dezember = 12
+                day: now.getDate()
             };
         }
 
@@ -369,9 +368,6 @@
 
         // Türchen öffnen
         function openDoor(day) {
-            const calendarData = loadCalendarData();
-            const doorData = calendarData[day];
-            
             const modal = document.getElementById('modal');
             const modalDay = document.getElementById('modalDay');
             const modalQuestion = document.getElementById('modalQuestion');
@@ -379,16 +375,35 @@
             
             modalDay.textContent = day + '. Dezember';
             modalQuestion.textContent = questions[Math.floor(Math.random() * questions.length)];
-            modalImage.src = doorData.image;
             
-            // Error handling falls Bild nicht existiert
+            // Versuche verschiedene Bildformate in dieser Reihenfolge
+            const formats = ['jpg', 'jpeg', 'png', 'gif'];
+            let formatIndex = 0;
+            
+            function tryLoadImage() {
+                if (formatIndex >= formats.length) {
+                    // Kein Bildformat funktioniert
+                    modalQuestion.textContent = `Bild ${day} wurde nicht gefunden. Bitte stelle sicher, dass eine Datei ${day}.jpg, ${day}.jpeg oder ${day}.png im images-Ordner existiert.`;
+                    modalImage.style.display = 'none';
+                    return;
+                }
+                
+                const imagePath = `images/${day}.${formats[formatIndex]}`;
+                modalImage.src = imagePath;
+            }
+            
             modalImage.onerror = function() {
-                modalQuestion.textContent = `Bild ${day}.${IMAGE_FORMAT} wurde nicht gefunden. Bitte stelle sicher, dass die Datei im images-Ordner existiert.`;
-                modalImage.style.display = 'none';
+                // Dieses Format hat nicht funktioniert, versuche das nächste
+                formatIndex++;
+                tryLoadImage();
             };
+            
             modalImage.onload = function() {
                 modalImage.style.display = 'block';
             };
+            
+            // Starte mit dem ersten Format
+            tryLoadImage();
             
             modal.classList.add('active');
             markDoorAsOpened(day);
