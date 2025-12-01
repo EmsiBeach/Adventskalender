@@ -7,7 +7,8 @@ Ein interaktiver digitaler Adventskalender mit Familienbildern für jeden Tag im
 ### Schritt 1: Bilder vorbereiten
 1. Wähle 24 Familienbilder aus (eins für jeden Tag)
 2. Benenne sie um zu: `1.jpg`, `2.jpg`, `3.jpg`, ... `24.jpg`
-   - Alternativ auch als `.png` möglich, dann im Code anpassen (siehe unten)
+   - Alternativ: `.jpeg`, `.png` oder `.gif` - der Kalender erkennt das Format automatisch!
+   - Du kannst auch verschiedene Formate mischen (z.B. `1.jpg`, `2.png`, `3.jpeg`)
 
 ### Schritt 2: Bilder auf GitHub hochladen
 1. Erstelle einen Ordner `images` in deinem Repository:
@@ -20,20 +21,13 @@ Ein interaktiver digitaler Adventskalender mit Familienbildern für jeden Tag im
 4. Lade deine 24 umbenannten Bilder hoch
 5. Klicke "Commit changes"
 
-### Schritt 3: Bildformat anpassen (falls nötig)
-Wenn du PNG-Bilder statt JPG verwendest:
-1. Öffne `advent-calendar.html`
-2. Suche die Zeile: `const IMAGE_FORMAT = 'jpg';`
-3. Ändere zu: `const IMAGE_FORMAT = 'png';`
-4. Speichern und committen
-
-### Schritt 4: GitHub Pages aktivieren
+### Schritt 3: GitHub Pages aktivieren
 1. Gehe zu Settings → Pages
 2. Bei "Source": Wähle "Deploy from a branch"
 3. Bei "Branch": Wähle "main" und "/ (root)"
 4. Klicke "Save"
 
-### Schritt 5: Fertig! 🎉
+### Schritt 4: Fertig! 🎉
 Dein Kalender ist jetzt online unter:
 ```
 https://emsibeach.github.io/Adventskalender/advent-calendar.html
